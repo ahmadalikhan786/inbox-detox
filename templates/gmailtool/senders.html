@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Senders - StaySlay</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; margin: 20px; }
+        h1 { color: #333; }
+        ul { list-style: none; padding: 0; margin-bottom: 30px;}
+        li { border-bottom: 1px solid #eee; padding: 12px 5px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px;}
+        li:last-child { border-bottom: none; }
+        .sender-info { flex-basis: 55%; min-width: 200px; }
+        .sender-email { font-weight: bold; margin-right: 15px; word-break: break-all; display: block; margin-bottom: 3px;}
+        .sender-actions { flex-basis: 40%; min-width: 220px; text-align: right; }
+        .email-count { background-color: #e9e9e9; padding: 3px 8px; border-radius: 10px; font-size: 0.9em; white-space: nowrap; display: inline-block; vertical-align: middle; margin-bottom: 5px;}
+        .actions form { display: inline-block; margin-left: 5px; } /* Forms for buttons */
+        .actions button { padding: 6px 10px; cursor: pointer; font-size: 0.9em; border-radius: 4px; border: 1px solid #ccc;}
+        .delete-now-btn { background-color: #f44336; color: white; border-color: #d32f2f;}
+        .delete-later-btn { background-color: #ff9800; color: white; border-color: #f57c00;}
+        .delete-now-btn:hover { background-color: #d32f2f; }
+        .delete-later-btn:hover { background-color: #f57c00; }
+        .logout-link { margin-top: 20px; margin-bottom: 15px; display: inline-block; padding: 8px 15px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px; }
+        .logout-link:hover { background-color: #5a6268; }
+        .error-message { background-color: #ffebee; border: 1px solid #ef9a9a; color: #c62828; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+        .success-message { background-color: #e8f5e9; border: 1px solid #a5d6a7; color: #2e7d32; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+        .info-message { background-color: #e3f2fd; border: 1px solid #90caf9; color: #1565c0; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+        .no-senders { font-style: italic; color: #555; }
+        .processing-note { font-size: 0.8em; color: #777; margin-top: 5px; }
+        /* Message Styling */
+        .django-messages { list-style: none; padding: 0; margin: 0 0 20px 0; }
+        .django-messages li { padding: 15px; margin-bottom: 10px; border-radius: 4px; border: 1px solid transparent; }
+        .django-messages li.success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .django-messages li.error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .django-messages li.warning { background-color: #fff3cd; border-color: #ffeeba; color: #856404; }
+        .django-messages li.info { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+    </style>
+</head>
+<body>
+
+    <h1>StaySlay Inbox Tool</h1>
+
+    <!-- Display Django Messages -->
+    {% if messages %}
+    <ul class="django-messages">
+        {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- Display Error Message if one occurred during initial sender fetch -->
+    {% if error_message %}
+        <div class="error-message">
+            <strong>Error loading sender list:</strong> {{ error_message }}
+        </div>
+    {% endif %}
+
+    <a href="{% url 'logout' %}" class="logout-link">Logout</a>
+
+    <h2>Top Senders by Volume</h2>
+
+    {% if senders %}
+        <ul>
+          {% for sender, count in senders %}
+            <li>
+                <div class="sender-info">
+                    <span class="sender-email">{{ sender }}</span>
+                     <span class="email-count">{{ count }} email{{ count|pluralize }}</span>
+                </div>
+                <div class="sender-actions">
+                     <!-- Forms for actions -->
+                     <span class="actions">
+                         <form action="{% url 'delete_now' %}" method="post">
+                             {% csrf_token %}
+                             <input type="hidden" name="sender_email" value="{{ sender }}">
+                             <button type="submit" class="delete-now-btn" onclick="return confirm('Are you sure you want to move all emails from {{ sender }} to Trash immediately?')">Delete Now</button>
+                         </form>
+                         <form action="{% url 'delete_later' %}" method="post">
+                             {% csrf_token %}
+                             <input type="hidden" name="sender_email" value="{{ sender }}">
+                             <button type="submit" class="delete-later-btn" onclick="return confirm('Are you sure you want to schedule deletion of all emails from {{ sender }} in one hour?')">Delete Later</button>
+                         </form>
+                     </span>
+                </div>
+            </li>
+          {% endfor %}
+        </ul>
+        <p class="processing-note">
+            (Note: For performance, results may be based on a limited number of recently processed emails.)
+        </p>
+    {% elif not error_message %}
+        <!-- Only show this if there wasn't an error but the list is empty -->
+        <p class="no-senders">No emails found matching the criteria, or the processing limit was reached before finding any.</p>
+        <p class="processing-note">
+            (Note: For performance, only a limited number of emails might be checked.)
+        </p>
+    {% endif %}
+
+</body>
+</html>

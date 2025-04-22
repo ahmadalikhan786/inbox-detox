@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Authentication Error</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; }
+        .error-box { background-color: #fff; border: 1px solid #ddd; border-left: 5px solid #d9534f; padding: 20px; margin: 20px auto; max-width: 600px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #d9534f; margin-top: 0; }
+        a { color: #0275d8; }
+    </style>
+</head>
+<body>
+    <div class="error-box">
+        <h1>Authentication Failed</h1>
+        <p>Sorry, there was a problem during the authentication process:</p>
+        <p><strong>{{ error_message|default:"An unspecified error occurred." }}</strong></p>
+        <p>Please <a href="{% url 'login' %}">try logging in again</a>.</p>
+    </div>
+</body>
+</html>
