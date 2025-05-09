@@ -1,3 +1,4 @@
+
 """
 Django settings for stayslay project.
 
@@ -12,22 +13,75 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
-
+from django.urls import reverse_lazy
+import logging
 BASE_DIR = Path(__file__).resolve().parent.parent
 GOOGLE_OAUTH2_SCOPES = [
-    'https://www.googleapis.com/auth/gmail.readonly',
-    'https://www.googleapis.com/auth/gmail.modify'
+    'openid',  # Required for user identification
+    'https://www.googleapis.com/auth/userinfo.email', # Required to get email
+    'https://www.googleapis.com/auth/userinfo.profile', # Recommended to get name
+    'https://www.googleapis.com/auth/gmail.readonly', # Your existing scope
+    'https://www.googleapis.com/auth/gmail.modify' , # Your existing scope
 ]
-CREDENTIALS_JSON_PATH = os.path.join(BASE_DIR, 'credentials.json') # Adjust path as needed
+CREDENTIALS_JSON_PATH = "/var/www/gmailtool/Gmail_Tool/credentials/credentials.json"
+# Ensure these are all defined:
+GOOGLE_CLIENT_ID = '105754817720-vset9poiiqpof5df6hpmvssmcr4dh9ps.apps.googleusercontent.com'
+GOOGLE_CLIENT_SECRET = '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' # STORE SECURELY
+GOOGLE_TOKEN_URI = 'https://oauth2.googleapis.com/token'  # *** ADD THIS LINE ***
+
 APSCHEDULER_JOBSTORES = {
     'default': {
         'type': 'memory'
     }
 }
 APSCHEDULER_RUN_NOW_TIMEOUT = 25  # Seconds
+LOGIN_URL = reverse_lazy('login')
 
 
+LANGUAGE_CODE = 'en-us'
 
+TIME_ZONE = 'UTC' # <-- DEFINED HERE
+
+USE_I18N = True
+
+USE_TZ = True
+
+# ... (SESSION_COOKIE_SECURE, CSRF_COOKIE_SECURE, STATIC_URL etc.)
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
+
+
+# Celery Configuration Options  <-- PASTED HERE
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Redis is used as the message broker
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # Store results in Redis
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE  # Assuming your TIME_ZONE variable is set
+
+# Celery Beat Schedule (periodic tasks)
+CELERY_BEAT_SCHEDULE = {
+    'check_and_schedule_deletion': {
+        'task': 'gmailtool.tasks.check_and_schedule_deletion',
+        'schedule': 60.0,  # Runs every minute (adjust as needed)
+    },
+}
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -37,7 +91,7 @@ SECRET_KEY = 'django-insecure-z&^7n7@(gw5575um-bb9aem(bl8)km-)ah0bs$eg042=&&k&7v
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['inbox-detox.com', 'www.inbox-detox.com', '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -92,6 +146,7 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 
 # Password validation
@@ -116,13 +171,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
 
-USE_I18N = True
-
-USE_TZ = True
 
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
@@ -137,3 +187,4 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+GOOGLE_OAUTH_REDIRECT_URI = 'https://inbox-detox.com/oauth2callback/'

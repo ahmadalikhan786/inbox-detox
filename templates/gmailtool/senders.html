@@ -3,99 +3,298 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top Senders - StaySlay</title>
+    <title>Senders - Inbox-Detox.com</title>
+    <meta name="csrf-token" content="{{ csrf_token }}"> {# For JS CSRF Token access #}
     <style>
-        body { font-family: sans-serif; line-height: 1.6; margin: 20px; }
-        h1 { color: #333; }
-        ul { list-style: none; padding: 0; margin-bottom: 30px;}
-        li { border-bottom: 1px solid #eee; padding: 12px 5px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px;}
-        li:last-child { border-bottom: none; }
-        .sender-info { flex-basis: 55%; min-width: 200px; }
-        .sender-email { font-weight: bold; margin-right: 15px; word-break: break-all; display: block; margin-bottom: 3px;}
-        .sender-actions { flex-basis: 40%; min-width: 220px; text-align: right; }
-        .email-count { background-color: #e9e9e9; padding: 3px 8px; border-radius: 10px; font-size: 0.9em; white-space: nowrap; display: inline-block; vertical-align: middle; margin-bottom: 5px;}
-        .actions form { display: inline-block; margin-left: 5px; } /* Forms for buttons */
-        .actions button { padding: 6px 10px; cursor: pointer; font-size: 0.9em; border-radius: 4px; border: 1px solid #ccc;}
-        .delete-now-btn { background-color: #f44336; color: white; border-color: #d32f2f;}
-        .delete-later-btn { background-color: #ff9800; color: white; border-color: #f57c00;}
-        .delete-now-btn:hover { background-color: #d32f2f; }
-        .delete-later-btn:hover { background-color: #f57c00; }
-        .logout-link { margin-top: 20px; margin-bottom: 15px; display: inline-block; padding: 8px 15px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px; }
-        .logout-link:hover { background-color: #5a6268; }
-        .error-message { background-color: #ffebee; border: 1px solid #ef9a9a; color: #c62828; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
-        .success-message { background-color: #e8f5e9; border: 1px solid #a5d6a7; color: #2e7d32; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
-        .info-message { background-color: #e3f2fd; border: 1px solid #90caf9; color: #1565c0; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
-        .no-senders { font-style: italic; color: #555; }
-        .processing-note { font-size: 0.8em; color: #777; margin-top: 5px; }
-        /* Message Styling */
-        .django-messages { list-style: none; padding: 0; margin: 0 0 20px 0; }
-        .django-messages li { padding: 15px; margin-bottom: 10px; border-radius: 4px; border: 1px solid transparent; }
-        .django-messages li.success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
-        .django-messages li.error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        /* --- Base Theme (as provided, add new colors) --- */
+        :root {
+            --primary-blue: #007bff; --primary-blue-darker: #0056b3;
+            --secondary-grey: #6c757d; --secondary-grey-darker: #5a6268;
+            --light-grey: #f8f9fa; --medium-grey: #dee2e6; --dark-grey: #343a40;
+            --white: #ffffff;
+            --red-danger: #dc3545; --red-danger-darker: #c82333;
+            /* Schedule/Unschedule Button Colors */
+            --green-schedule: #28a745; --green-schedule-darker: #1e7e34;
+            --orange-unschedule: #fd7e14; --orange-unschedule-darker: #d36306;
+            /* Message Colors */
+            --green-success-bg: #d1e7dd; --green-success-border: #badbcc; --green-success-text: #0f5132;
+            --red-error-bg: #f8d7da; --red-error-border: #f5c6cb; --red-error-text: #842029;
+            --blue-info-bg: #cff4fc; --blue-info-border: #b6effb; --blue-info-text: #055160;
+            --box-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            --border-radius: 0.375rem;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #eef2f7; color: var(--dark-grey); }
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+        h1, h2 { color: var(--dark-grey); text-align: center; margin-bottom: 1.5em; font-weight: 600; }
+        h1 { font-size: 1.8em; } h2 { font-size: 1.6em; margin-top: 1em; }
+
+        /* Header */
+        .header-container { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; margin-bottom: 20px; border-bottom: 1px solid var(--medium-grey); }
+        .header-container h1 { margin: 0; text-align: center; flex-grow: 1; padding: 0 50px; font-size: 1.8em; }
+        .header-logout-btn { padding: 8px 18px; font-size: 0.9em; background-color: var(--secondary-grey); color: var(--white); text-decoration: none; border-radius: var(--border-radius); border: none; cursor: pointer; font-weight: 500; transition: background-color 0.2s ease, box-shadow 0.2s ease; flex-shrink: 0; }
+        .header-logout-btn:hover { background-color: var(--secondary-grey-darker); box-shadow: var(--box-shadow-sm); }
+
+        /* Messages */
+        .django-messages { list-style: none; padding: 0; margin: 0 auto 25px auto; max-width: 850px; }
+        .django-messages li { padding: 1rem 1.25rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: var(--border-radius); box-shadow: var(--box-shadow-sm); font-size: 0.95em; }
+        .django-messages li.success { background-color: var(--green-success-bg); border-color: var(--green-success-border); color: var(--green-success-text); }
+        .django-messages li.error { background-color: var(--red-error-bg); border-color: var(--red-error-border); color: var(--red-error-text); }
+        .django-messages li.info { background-color: var(--blue-info-bg); border-color: var(--blue-info-border); color: var(--blue-info-text); }
         .django-messages li.warning { background-color: #fff3cd; border-color: #ffeeba; color: #856404; }
-        .django-messages li.info { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+
+        /* Global Actions (for Run button) */
+        .global-actions { text-align: center; margin-bottom: 25px; }
+        .global-actions button { padding: 10px 20px; font-size: 1em; font-weight: 500; background-color: var(--primary-blue); color: var(--white); border: none; border-radius: var(--border-radius); cursor: pointer; transition: background-color 0.2s ease, box-shadow 0.2s ease; }
+        .global-actions button:hover { background-color: var(--primary-blue-darker); box-shadow: var(--box-shadow-sm); }
+        .global-actions button:disabled { background-color: #adb5bd; cursor: not-allowed; }
+
+        /* Sender List */
+        ul#sender-list { list-style: none; padding: 0; margin-bottom: 30px; background-color: var(--white); border-radius: var(--border-radius); box-shadow: var(--box-shadow); overflow: hidden; }
+        li.sender-item { border-bottom: 1px solid var(--medium-grey); padding: 20px 25px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; transition: background-color 0.15s ease-in-out; }
+        li.sender-item:hover { background-color: #f8f9fa; }
+        li.sender-item.removing { opacity: 0; transform: translateX(-30px); transition: opacity 0.3s ease-out, transform 0.3s ease-out !important; }
+        li.sender-item:last-child { border-bottom: none; }
+        .sender-info { flex-grow: 1; min-width: 250px; word-break: break-word; }
+        .sender-email { font-weight: 600; display: block; margin-bottom: 5px; color: var(--primary-blue); font-size: 1.05em; }
+        .email-count { background-color: var(--medium-grey); color: var(--dark-grey); padding: 5px 12px; border-radius: 15px; font-size: 0.8em; font-weight: 500; white-space: nowrap; display: inline-block; vertical-align: middle; margin-left: 10px; }
+        .sender-actions { flex-shrink: 0; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+        .actions-buttons { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+        .actions-buttons form { margin: 0; display: inline-block; } /* Ensure forms are inline */
+        .actions-buttons button { padding: 8px 12px; cursor: pointer; font-size: 0.85em; font-weight: 500; border-radius: var(--border-radius); border: none; transition: background-color 0.2s ease, box-shadow 0.2s ease; white-space: nowrap; }
+        .actions-buttons button:hover { box-shadow: var(--box-shadow-sm); }
+        .delete-now-btn { background-color: var(--red-danger); color: var(--white); }
+        .delete-now-btn:hover { background-color: var(--red-danger-darker); }
+        .schedule-deletion-btn { background-color: var(--green-schedule); color: var(--white); }
+        .schedule-deletion-btn:hover { background-color: var(--green-schedule-darker); }
+        .unschedule-deletion-btn { background-color: var(--orange-unschedule); color: var(--white); }
+        .unschedule-deletion-btn:hover { background-color: var(--orange-unschedule-darker); }
+        .actions-buttons button:disabled { background-color: #adb5bd; color: #f8f9fa; cursor: not-allowed; box-shadow: none; }
+
+        /* Status Message & Notes */
+        .status-message { font-size: 0.85em; font-style: italic; color: var(--secondary-grey); min-height: 1.2em; text-align: right; transition: opacity 0.3s ease-in-out; opacity: 1; }
+        .status-success { color: var(--green-success-text); font-weight: 500; }
+        .status-error { color: var(--red-error-text); font-weight: 500; }
+        .status-processing { color: var(--primary-blue); font-weight: 500; }
+        .no-senders { font-style: italic; color: var(--secondary-grey); text-align: center; padding: 30px 20px; background-color: var(--white); border-radius: var(--border-radius); box-shadow: var(--box-shadow); max-width: 850px; margin: 30px auto; }
+        .processing-note-display { background-color: var(--blue-info-bg); color: var(--blue-info-text); border: 1px solid var(--blue-info-border); padding: 10px 15px; margin: 20px auto; border-radius: var(--border-radius); text-align: center; max-width: 850px; font-size: 0.9em; }
+
+        .modal { display: none !important; } /* Hide any old modal styles if they existed */
     </style>
 </head>
 <body>
-
-    <h1>StaySlay Inbox Tool</h1>
-
-    <!-- Display Django Messages -->
-    {% if messages %}
-    <ul class="django-messages">
-        {% for message in messages %}
-            <li class="{{ message.tags }}">{{ message }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-
-    <!-- Display Error Message if one occurred during initial sender fetch -->
-    {% if error_message %}
-        <div class="error-message">
-            <strong>Error loading sender list:</strong> {{ error_message }}
+    <div class="container">
+        <div class="header-container">
+            <h1>Inbox-Detox.com</h1>
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'logout' %}" class="header-logout-btn">Logout</a> {# Ensure 'logout' is your correct URL name #}
+            {% endif %}
         </div>
-    {% endif %}
 
-    <a href="{% url 'logout' %}" class="logout-link">Logout</a>
-
-    <h2>Top Senders by Volume</h2>
-
-    {% if senders %}
-        <ul>
-          {% for sender, count in senders %}
-            <li>
-                <div class="sender-info">
-                    <span class="sender-email">{{ sender }}</span>
-                     <span class="email-count">{{ count }} email{{ count|pluralize }}</span>
-                </div>
-                <div class="sender-actions">
-                     <!-- Forms for actions -->
-                     <span class="actions">
-                         <form action="{% url 'delete_now' %}" method="post">
-                             {% csrf_token %}
-                             <input type="hidden" name="sender_email" value="{{ sender }}">
-                             <button type="submit" class="delete-now-btn" onclick="return confirm('Are you sure you want to move all emails from {{ sender }} to Trash immediately?')">Delete Now</button>
-                         </form>
-                         <form action="{% url 'delete_later' %}" method="post">
-                             {% csrf_token %}
-                             <input type="hidden" name="sender_email" value="{{ sender }}">
-                             <button type="submit" class="delete-later-btn" onclick="return confirm('Are you sure you want to schedule deletion of all emails from {{ sender }} in one hour?')">Delete Later</button>
-                         </form>
-                     </span>
-                </div>
-            </li>
-          {% endfor %}
+        <ul class="django-messages" id="django-message-container" style="display: {% if messages %}block{% else %}none{% endif %};">
+            {% if messages %}
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            {% endif %}
         </ul>
-        <p class="processing-note">
-            (Note: For performance, results may be based on a limited number of recently processed emails.)
-        </p>
-    {% elif not error_message %}
-        <!-- Only show this if there wasn't an error but the list is empty -->
-        <p class="no-senders">No emails found matching the criteria, or the processing limit was reached before finding any.</p>
-        <p class="processing-note">
-            (Note: For performance, only a limited number of emails might be checked.)
-        </p>
-    {% endif %}
 
+        <h2>Top Senders by Volume</h2>
+        
+        {% if processing_note %} {# This is the block you asked to remove previously to hide the note #}
+            {# <div class="processing-note-display">{{ processing_note }}</div> #}
+        {% endif %}
+
+        {% if user.is_authenticated %}
+        <div class="global-actions">
+            <form id="run-my-scheduled-form" method="POST" action="{% url 'run_my_scheduled_deletions_now' %}">
+                {% csrf_token %}
+                <button type="submit" id="run-my-scheduled-btn">Run My Scheduled Deletions</button>
+            </form>
+        </div>
+        {% endif %}
+
+        {% if senders %}
+            <ul id="sender-list">
+              {% for sender_email, count in senders %}
+                <li class="sender-item" id="sender-item-{{ forloop.counter0 }}" data-sender-email="{{ sender_email }}">
+                    <div class="sender-info">
+                        <span class="sender-email">{{ sender_email }}</span>
+                        <span class="email-count">{{ count }} email{{ count|pluralize }}</span>
+                    </div>
+                    <div class="sender-actions">
+                         <div class="actions-buttons">
+                             <form class="delete-now-form" data-action-url="{% url 'delete_now' %}">
+                                 {% csrf_token %}
+                                 <input type="hidden" name="sender_email" value="{{ sender_email }}">
+                                 <button type="submit" class="delete-now-btn">Delete All Now</button>
+                             </form>
+
+                             {% if sender_email in scheduled_rules_senders %}
+                                 <form class="unschedule-deletion-form" data-action-url="{% url 'unschedule_sender_deletion' %}">
+                                     {% csrf_token %}
+                                     <input type="hidden" name="sender_email" value="{{ sender_email }}">
+                                     <button type="submit" class="unschedule-deletion-btn">Unschedule Deletion</button>
+                                 </form>
+                             {% else %}
+                                 <form class="schedule-deletion-form" data-action-url="{% url 'schedule_sender_deletion' %}">
+                                     {% csrf_token %}
+                                     <input type="hidden" name="sender_email" value="{{ sender_email }}">
+                                     <button type="submit" class="schedule-deletion-btn">Schedule Deletion (>1d)</button>
+                                 </form>
+                             {% endif %}
+                         </div>
+                         <span class="status-message"></span>
+                    </div>
+                </li>
+              {% endfor %}
+            </ul>
+        {% else %}
+             <p class="no-senders" id="no-senders-message">
+                {% if error_message %}
+                    Error loading senders: {{ error_message }}
+                {% elif not processing_note %} 
+                     No email senders found in your inbox matching the analysis criteria, or analysis is still in progress.
+                {% endif %}
+             </p>
+        {% endif %}
+        <p class="no-senders" id="no-senders-message-js" style="display: none;"></p>
+
+    </div>
+
+    <script>
+    function showDjangoMessage(type, text, duration = 7000) { const container = document.getElementById('django-message-container'); if (!container) return; container.style.display = 'block'; const messageLi = document.createElement('li'); messageLi.className = type; messageLi.textContent = text; container.appendChild(messageLi); try { container.scrollIntoView({ behavior: 'smooth', block: 'end' }); } catch(e) {} setTimeout(() => { if (messageLi) { messageLi.style.transition = 'opacity 0.5s ease'; messageLi.style.opacity = '0'; setTimeout(() => { if (messageLi) messageLi.remove(); if (container && !container.hasChildNodes()) container.style.display = 'none'; }, 500); } }, duration); }
+    function checkSenderListEmpty() { const senderList = document.getElementById('sender-list'); const noSendersMsgJS = document.getElementById('no-senders-message-js'); const initialNoSendersMsg = document.getElementById('no-senders-message'); if (!senderList || !noSendersMsgJS || !initialNoSendersMsg) return; const remainingItems = senderList.querySelectorAll('li.sender-item'); if (remainingItems.length === 0) { initialNoSendersMsg.style.display = 'none'; noSendersMsgJS.textContent = 'All displayed senders processed or removed.'; noSendersMsgJS.style.display = 'block'; if (senderList) senderList.style.display = 'none'; } else { noSendersMsgJS.style.display = 'none'; if (senderList) senderList.style.display = 'block'; } }
+    function getCsrfToken() { const tokenMeta = document.querySelector('meta[name="csrf-token"]'); if (tokenMeta) return tokenMeta.getAttribute('content'); const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]'); if (csrfInput) return csrfInput.value; const csrfCookie = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken=')); if (csrfCookie) return csrfCookie.split('=')[1]; console.error("CSRF token not found."); showDjangoMessage('error', 'Security token missing.'); return null; }
+    function updateRowStatus(rowElement, text, statusClass = '', clearAfter = 4000) { if (!rowElement) return; const statusElement = rowElement.querySelector('.status-message'); if (!statusElement) return; statusElement.textContent = text; statusElement.className = 'status-message'; if (statusClass) statusElement.classList.add(statusClass); const isPersistent = statusClass.includes('error') || statusClass.includes('processing'); if (clearAfter > 0 && !isPersistent) { setTimeout(() => { if (statusElement.textContent === text) { statusElement.textContent = ''; statusElement.className = 'status-message'; } }, clearAfter); } }
+    function setRowButtonsDisabled(rowElement, disabled) { if (rowElement) rowElement.querySelectorAll('.actions-buttons button').forEach(btn => btn.disabled = disabled); }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        checkSenderListEmpty();
+        const messageContainer = document.getElementById('django-message-container');
+        if (messageContainer && !messageContainer.hasChildNodes()) messageContainer.style.display = 'none';
+
+        const senderListUL = document.getElementById('sender-list');
+        if (senderListUL) {
+            senderListUL.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const form = event.target;
+                const rowElement = form.closest('li.sender-item');
+                if (!rowElement) { console.error("No parent row for form."); return; }
+
+                const actionUrl = form.dataset.actionUrl;
+                const senderEmail = rowElement.dataset.senderEmail;
+                const csrfToken = getCsrfToken();
+
+                if (!actionUrl || !senderEmail || !csrfToken) {
+                    showDjangoMessage('error', 'UI Error: Missing data for action.'); return;
+                }
+
+                let confirmMessage = "";
+                const isDeleteNow = form.classList.contains('delete-now-form');
+                const isSchedule = form.classList.contains('schedule-deletion-form');
+                const isUnschedule = form.classList.contains('unschedule-deletion-form');
+
+                if (isDeleteNow) confirmMessage = `Start background deletion for ALL emails from ${senderEmail}? Cannot be easily undone.`;
+                else if (isSchedule) confirmMessage = `Schedule automatic deletion (>1 day) for emails from ${senderEmail}?`;
+                else if (isUnschedule) confirmMessage = `Remove the scheduled deletion for ${senderEmail}?`;
+
+                if (confirmMessage && !confirm(confirmMessage)) return;
+
+                setRowButtonsDisabled(rowElement, true);
+                updateRowStatus(rowElement, 'Processing...', 'status-processing', 0);
+                const formData = new FormData(form);
+
+                try {
+                    const response = await fetch(actionUrl, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    });
+                    const data = await response.json().catch(() => ({ status: 'error', message: `Invalid server response (${response.status})` }));
+
+                    if (response.ok && (data.status === 'success' || data.status === 'info')) {
+                        showDjangoMessage(data.status, data.message || 'Action completed.');
+                        if (isDeleteNow) {
+                            rowElement.classList.add('removing');
+                            setTimeout(() => { if (rowElement) rowElement.remove(); checkSenderListEmpty(); }, 300);
+                        } else if (isSchedule || isUnschedule) {
+                            const actionsDiv = rowElement.querySelector('.actions-buttons');
+                            if (actionsDiv) {
+                                const currentDynamicForm = actionsDiv.querySelector('.schedule-deletion-form, .unschedule-deletion-form');
+                                if (currentDynamicForm) currentDynamicForm.remove();
+                                let newFormHtml = '';
+                                const csrfInputHtml = `<input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">`;
+                                const senderInputHtml = `<input type="hidden" name="sender_email" value="${senderEmail}">`;
+                                const scheduleUrl = "{% url 'schedule_sender_deletion' %}";
+                                const unscheduleUrl = "{% url 'unschedule_sender_deletion' %}";
+
+                                if (isSchedule) {
+                                    newFormHtml = `
+                                        <form class="unschedule-deletion-form" data-action-url="${unscheduleUrl}">
+                                            ${csrfInputHtml}${senderInputHtml}
+                                            <button type="submit" class="unschedule-deletion-btn">Unschedule Deletion</button>
+                                        </form>`;
+                                } else {
+                                    newFormHtml = `
+                                        <form class="schedule-deletion-form" data-action-url="${scheduleUrl}">
+                                            ${csrfInputHtml}${senderInputHtml}
+                                            <button type="submit" class="schedule-deletion-btn">Schedule Deletion (>1d)</button>
+                                        </form>`;
+                                }
+                                const deleteNowForm = actionsDiv.querySelector('.delete-now-form');
+                                if (deleteNowForm) { deleteNowForm.insertAdjacentHTML('afterend', newFormHtml); }
+                                else { actionsDiv.insertAdjacentHTML('beforeend', newFormHtml); }
+                            }
+                            updateRowStatus(rowElement, data.message, 'status-success');
+                        }
+                    } else {
+                        const errorMsg = data.message || `Request failed (${response.status})`;
+                        showDjangoMessage('error', `Error: ${errorMsg}`);
+                        updateRowStatus(rowElement, 'Error', 'status-error');
+                    }
+                } catch (error) {
+                    console.error(`[Fetch Error] Action: ${actionUrl}, Sender: ${senderEmail}`, error);
+                    showDjangoMessage('error', `Network error for ${senderEmail}.`);
+                    updateRowStatus(rowElement, 'Network Error', 'status-error');
+                } finally {
+                    if (!isDeleteNow) setRowButtonsDisabled(rowElement, false);
+                }
+            });
+        }
+
+        const runMyScheduledForm = document.getElementById('run-my-scheduled-form');
+        if (runMyScheduledForm) {
+            runMyScheduledForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const runButton = document.getElementById('run-my-scheduled-btn');
+                const originalButtonText = runButton.textContent;
+                const csrfToken = getCsrfToken();
+                if (!csrfToken) return;
+                runButton.disabled = true; runButton.textContent = 'Starting...';
+                try {
+                    const response = await fetch(runMyScheduledForm.action, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+                        body: new FormData(runMyScheduledForm)
+                    });
+                    const data = await response.json().catch(() => ({ status: 'error', message: `Invalid server response (${response.status})` }));
+                    if (response.ok && (data.status === 'success' || data.status === 'info')) {
+                        showDjangoMessage(data.status, data.message || 'Scheduled deletions started.');
+                    } else {
+                        showDjangoMessage('error', `Error: ${data.message || 'Failed to start.'}`);
+                    }
+                } catch (error) {
+                    showDjangoMessage('error', 'Network error trying to run scheduled deletions.');
+                } finally {
+                    runButton.disabled = false; runButton.textContent = originalButtonText;
+                }
+            });
+        }
+
+        const serverMessages = document.querySelectorAll('#django-message-container li');
+        if (serverMessages.length > 0) { const msgContainer = document.getElementById('django-message-container'); if(msgContainer) msgContainer.style.display = 'block'; serverMessages.forEach(msgLi => { setTimeout(() => { if (msgLi) { msgLi.style.transition = 'opacity 0.5s ease'; msgLi.style.opacity = '0'; setTimeout(() => { if (msgLi) msgLi.remove(); if (msgContainer && !msgContainer.hasChildNodes()) msgContainer.style.display = 'none'; }, 500); } }, 7000); }); }
+    });
+    </script>
 </body>
 </html>

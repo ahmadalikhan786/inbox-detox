@@ -1,0 +1,105 @@
+/* Base Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f6f8;
+    color: #2c3e50;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 60px 20px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Header */
+.landing-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.landing-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1a252f;
+}
+
+/* Main Content */
+.landing-main {
+    flex-grow: 1;
+}
+
+.intro-section {
+    text-align: center;
+}
+
+.intro-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 30px;
+    font-weight: 500;
+    color: #3c4b5e;
+}
+
+.benefits-list {
+    list-style-type: decimal;
+    margin: 0 auto 40px;
+    padding-left: 20px;
+    max-width: 600px;
+    text-align: left;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #555;
+}
+
+.benefits-list li {
+    margin-bottom: 15px;
+}
+
+/* Button */
+.btn {
+    padding: 14px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.login-button {
+    background-color: #4285F4;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.login-button:hover {
+    background-color: #357ae8;
+    transform: translateY(-1px);
+}
+
+.login-button:active {
+    transform: translateY(0);
+}
+
+/* Footer */
+.landing-footer {
+    margin-top: 60px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #888;
+    border-top: 1px solid #ddd;
+    padding-top: 20px;
+}

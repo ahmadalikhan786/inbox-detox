@@ -1,21 +1,27 @@
 # gmailtool/urls.py
 
 from django.urls import path
+from django.shortcuts import redirect, reverse
 from . import views
 
 urlpatterns = [
-    # Authentication Flow
+    path('', views.index_page, name='index_page'),
+    
     path('login/', views.login, name='login'),
-    path('oauth2callback/', views.oauth2callback, name='oauth2callback'), # Handles google response ONLY
+    path('oauth2callback/', views.oauth2callback, name='oauth2callback'),
     path('logout/', views.logout, name='logout'),
 
-    # View to display data
-    path('senders/', views.show_senders, name='show_senders'), # Displays the list
+    
+    path('senders/', views.show_senders, name='show_senders'),
+    path('loading/', views.loading_page, name='loading_page'),
 
-    # Deletion Actions
+    
     path('delete/now/', views.delete_now, name='delete_now'),
-    path('delete/later/', views.delete_later, name='delete_later'),
+    
+    path('schedule-deletion/', views.schedule_sender_deletion_view, name='schedule_sender_deletion'),
+    path('unschedule-deletion/', views.unschedule_sender_deletion_view, name='unschedule_sender_deletion'),
 
-    # Optional: Redirect root URL?
-    path('', lambda request: redirect(reverse('login')), name='home'), # Example: root redirects to login
+    
+    path('run-my-scheduled/', views.run_my_scheduled_deletions_now_view, name='run_my_scheduled_deletions_now'),
+    
 ]

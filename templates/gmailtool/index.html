@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inbox Detox - Save Time, Stay Organized</title>
+    <link rel="stylesheet" href="{% static 'gmailtool/css/landing_style.css' %}">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header class="landing-header">
+            <h1>Inbox-Detox.com</h1>
+        </header>
+
+        <main class="landing-main">
+            <section class="intro-section">
+                <h2>Clean your inbox effortlessly and reclaim up to 50 hours a year.</h2>
+                <ul class="benefits-list">
+                    <li>Free up to 1,000 emails processed</li>
+                    <li>Secure: no content is read or shared</li>
+                    <li>Fast & easy: clean your inbox in a single click</li>
+                </ul>
+                <a href="{% url 'login' %}" class="btn login-button">
+                    Login with Google to Get Started
+                </a>
+            </section>
+        </main>
+
+        <footer class="landing-footer">
+            <p>&copy; {% now "Y" %} Inbox-Detox.com. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>
